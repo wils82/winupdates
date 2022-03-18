@@ -30,7 +30,7 @@ exit
 
 #Download Windows Updates on target server and schedule overnight reboot
 import-module pswindowsupdate
-Set-Item WSMan:\localhost\Client\TrustedHosts -Concatenate –Value $server -Force
+Set-Item WSMan:\localhost\Client\TrustedHosts -Concatenate â€“Value $server -Force
 Invoke-Command -ComputerName $server -ScriptBlock {
 set-service -name wuauserv -startuptype manual -status Running
 }
