@@ -1,0 +1,35 @@
+Winupdates.ps1 is used to automate Windows Updates installations on remote machines and schedules an out of hours reboot.
+
+REQUIREMENTS:
+- Place the script in c:\winupdates on the central server, e.g wsus
+- Must have the pswindowsupdates module in the winupdates folder
+- Must have the scripts folder, this contains .bat files used in the overnight reboot of target servers
+- Must have .xml files to generate the scheduled tasks to reboot target servers. "reboot" task runs scripts/reboot.bat and 
+	"disablereboot" runs scripts/disablereboot.bat
+	
+HOW TO RUN:
+
+- Create a scheduled task to run Winupdates.ps1 "textfilewithservers.txt"
+	for example powershell.exe -file C:\winupdates\winupdates1.ps1 "serverlist1.txt"
+- set the time preferably after 5, this minimises user impact but give enough time for updates to finish before scheduled reboot
+- Use the serverlist textfiles to specify the target servers. You can add different scheduled tasks on different days to update 
+	many servers, just change the textfile as a parameter with each sched task
+- Alternatively open up a powershell window and manually run if you want to see job statuses
+
+The scheduled reboot was written to occur at midnight. (It initiates at 11:45 and reboots in 15 minutes giving users warning. If
+you want to change the reboot time you must go into reboot.xml and change the time in the <startboundary> tags, keep in mind 
+the reboot will occur 15 minutes after the time set.
+
+HOW IT WORKS:
+
+The script will create jobs to update each server in the serverlist text file. Each job does the following:
+
+- winupdates.ps1 imports the PSWindowsUpdate module and the "Scripts" folder to the target servers C: drive. The
+Scripts folder contains the batch files used in the scheduled reboot
+- It also imports the scheduled tasks through the xml files. "Reboot" task is disabled by default on import
+- The PSWindowsUpdates module is used  to get windows updates on the target server and then enables the "reboot"
+scheduled task to reboot at midnight. 
+- the reboot task simply runs reboot.bat which schedules a reboot in 15 minutes and warns users to save/logoff
+- When the host restarts, the other scheduled task "disablereboot" runs on startup, this runs disablereboot.bat which 
+disables "reboot" task (to stop the host restarting every day)
+- when a server updates, it will store an output log at c$\winupdates\logs (on the server you schedule the script from)
